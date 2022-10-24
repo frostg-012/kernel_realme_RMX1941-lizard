@@ -87,6 +87,7 @@
 #include <linux/slab.h>
 #include <linux/flex_array.h>
 #include <linux/posix-timers.h>
+#include <linux/cpufreq_times.h>
 #ifdef CONFIG_HARDWALL
 #include <asm/hardwall.h>
 #endif
@@ -95,6 +96,12 @@
 #include "fd.h"
 
 #include "../../lib/kstrtox.h"
+#ifdef VENDOR_EDIT
+/* Wen.Luo@BSP.Kernel.Stability, 2019/04/26, Add for Process memory statistics */
+extern size_t get_ion_heap_by_pid(pid_t pid);
+extern size_t get_gl_mem_by_pid(pid_t pid);
+#endif
+
 
 /* NOTE:
  *	Implementing inode permission operations in /proc is almost
@@ -401,6 +408,59 @@ static const struct file_operations proc_pid_cmdline_ops = {
 	.read	= proc_pid_cmdline_read,
 	.llseek	= generic_file_llseek,
 };
+
+#ifdef VENDOR_EDIT
+/* Wen.Luo@BSP.Kernel.Stability, 2019/04/26, Add for Process memory statistics */
+#define P2K(x) ((x) << (PAGE_SHIFT - 10))	/* Converts #Pages to KB */
+
+static ssize_t proc_pid_real_phymemory_read(struct file *file, char __user *buf,
+				     size_t _count, loff_t *pos)
+{
+	struct task_struct *tsk;
+	struct task_struct *p;
+	char buffer[128];
+	unsigned long rss = 0;
+	unsigned long rswap = 0;
+	unsigned long ion = 0;
+	unsigned long gpu = 0;
+	unsigned long totalram_size = 0;
+	size_t len;
+
+	BUG_ON(*pos < 0);
+
+	tsk = get_proc_task(file_inode(file));   //first_tid find will get_proc_task
+	if (!tsk)
+		return 0;
+	if (tsk->flags & PF_KTHREAD) {
+		put_task_struct(tsk);
+		return 0;
+	}
+	put_task_struct(tsk);
+
+	tsk = tsk->group_leader;
+	get_task_struct(tsk);
+	ion = get_ion_heap_by_pid(tsk->pid);
+	gpu = get_gl_mem_by_pid(tsk->pid);
+
+	p = find_lock_task_mm(tsk);
+	if (p) {
+		rss = P2K(get_mm_rss(p->mm));
+		rswap = P2K(get_mm_counter(p->mm, MM_SWAPENTS));
+		task_unlock(p);
+	}
+	totalram_size = ion + gpu + rss + rswap;
+	put_task_struct(tsk);
+
+	len = snprintf(buffer, sizeof(buffer), "RSS:%luKB \nRswap:%luKB \nION:%luKB \nGPU:%luKB \nTotalsize:%luKB \n",
+		rss, rswap, ion, gpu, totalram_size);
+	return simple_read_from_buffer(buf, _count, pos, buffer, len);
+}
+
+static const struct file_operations proc_pid_real_phymemory_ops = {
+	.read	= proc_pid_real_phymemory_read,
+	.llseek	= generic_file_llseek,
+};
+#endif
 
 #ifdef CONFIG_KALLSYMS
 /*
@@ -2922,9 +2982,13 @@ static const struct pid_entry tgid_base_stuff[] = {
 	REG("mounts",     S_IRUGO, proc_mounts_operations),
 	REG("mountinfo",  S_IRUGO, proc_mountinfo_operations),
 	REG("mountstats", S_IRUSR, proc_mountstats_operations),
+#ifdef CONFIG_PROCESS_RECLAIM
+	REG("reclaim",    0222, proc_reclaim_operations),
+#endif
 #ifdef CONFIG_PROC_PAGE_MONITOR
 	REG("clear_refs", S_IWUSR, proc_clear_refs_operations),
 	REG("smaps",      S_IRUGO, proc_pid_smaps_operations),
+	REG("smaps_rollup", S_IRUGO, proc_pid_smaps_rollup_operations),
 	REG("pagemap",    S_IRUSR, proc_pagemap_operations),
 #endif
 #ifdef CONFIG_SECURITY
@@ -2977,6 +3041,13 @@ static const struct pid_entry tgid_base_stuff[] = {
 	REG("timers",	  S_IRUGO, proc_timers_operations),
 #endif
 	REG("timerslack_ns", S_IRUGO|S_IWUGO, proc_pid_set_timerslack_ns_operations),
+#ifdef CONFIG_CPU_FREQ_TIMES
+	ONE("time_in_state", 0444, proc_time_in_state_show),
+#endif
+#ifdef VENDOR_EDIT
+/* Wen.Luo@BSP.Kernel.Stability, 2019/04/26, Add for Process memory statistics */
+	REG("real_phymemory",    S_IRUGO, proc_pid_real_phymemory_ops),
+#endif
 };
 
 static int proc_tgid_base_readdir(struct file *file, struct dir_context *ctx)
@@ -3316,6 +3387,7 @@ static const struct pid_entry tid_base_stuff[] = {
 #ifdef CONFIG_PROC_PAGE_MONITOR
 	REG("clear_refs", S_IWUSR, proc_clear_refs_operations),
 	REG("smaps",     S_IRUGO, proc_tid_smaps_operations),
+	REG("smaps_rollup", S_IRUGO, proc_pid_smaps_rollup_operations),
 	REG("pagemap",    S_IRUSR, proc_pagemap_operations),
 #endif
 #ifdef CONFIG_SECURITY
@@ -3361,6 +3433,14 @@ static const struct pid_entry tid_base_stuff[] = {
 	REG("projid_map", S_IRUGO|S_IWUSR, proc_projid_map_operations),
 	REG("setgroups",  S_IRUGO|S_IWUSR, proc_setgroups_operations),
 #endif
+#ifdef CONFIG_CPU_FREQ_TIMES
+	ONE("time_in_state", 0444, proc_time_in_state_show),
+#endif
+#ifdef VENDOR_EDIT
+/* Wen.Luo@BSP.Kernel.Stability, 2019/04/26, Add for Process memory statistics */
+	REG("real_phymemory",   S_IRUGO, proc_pid_real_phymemory_ops),
+#endif
+
 };
 
 static int proc_tid_base_readdir(struct file *file, struct dir_context *ctx)

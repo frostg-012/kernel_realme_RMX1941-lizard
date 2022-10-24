@@ -19,18 +19,31 @@
 #include <linux/spinlock.h>
 #include <linux/timer.h>
 #include <linux/workqueue.h>
+#ifdef VENDOR_EDIT
+/*Yongpeng.Yi@PSW.MultiMedia.Display.Machine, 2017/12/8,modify for multibits backlight.*/
+#include <soc/oppo/oppo_project.h>
+#endif
 
 struct device;
 /*
  * LED Core
  */
+#ifndef VENDOR_EDIT
+/*Yongpeng.Yi@PSW.MultiMedia.Display.Machine, 2017/12/8,modify for multibits backlight.*/
 
 enum led_brightness {
 	LED_OFF		= 0,
 	LED_HALF	= 127,
 	LED_FULL	= 255,
 };
+#else
+enum led_brightness {
+	LED_OFF		= 0,
+	LED_HALF	= 1023,
+	LED_FULL	= 2047,
+};
 
+#endif /* VENDOR_EDIT */
 struct led_classdev {
 	const char		*name;
 	enum led_brightness	 brightness;

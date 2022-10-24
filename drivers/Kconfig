@@ -76,6 +76,13 @@ source "drivers/hwmon/Kconfig"
 
 source "drivers/thermal/Kconfig"
 
+source "drivers/trusty/Kconfig"
+
+#ifdef ODM_HQ_EDIT
+#chenxinjiang@ODM_HQ.Multimedia.audio, 2018/11/28, add for switch class driver
+source "drivers/switch/Kconfig"
+#endif #ODM_HQ_EDIT
+
 source "drivers/watchdog/Kconfig"
 
 source "drivers/ssb/Kconfig"
@@ -202,4 +209,13 @@ source "drivers/hwtracing/intel_th/Kconfig"
 
 source "drivers/fpga/Kconfig"
 
+source "drivers/tee/Kconfig"
+
+#ifdef VENDOR_EDIT
+#wenjie.Liu@CN.NFC.Basic.Hardware.1182186, 2018/11/17,
+# Add for:add for nxp nfc driver
+source "drivers/nfc/Kconfig"
+source "drivers/nfc/pn553-i2c/Kconfig"
+source "drivers/nfc/p73-spi/Kconfig"
+#endif VENDOR_EDIT
 endmenu

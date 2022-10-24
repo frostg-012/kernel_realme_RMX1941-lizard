@@ -4,6 +4,7 @@
 # 15 Sep 2000, Christoph Hellwig <hch@infradead.org>
 # Rewritten to use lists instead of if-statements.
 #
+subdir-ccflags-y += -Werror
 
 obj-y				+= irqchip/
 obj-y				+= bus/
@@ -175,3 +176,11 @@ obj-$(CONFIG_STM)		+= hwtracing/stm/
 obj-$(CONFIG_ANDROID)		+= android/
 obj-$(CONFIG_NVMEM)		+= nvmem/
 obj-$(CONFIG_FPGA)		+= fpga/
+obj-$(CONFIG_TEE)		+= tee/
+obj-$(CONFIG_TRUSTY)	+= trusty/
+
+#ifdef ODM_HQ_EDIT
+#chenxinjiang@ODM_HQ.Multimedia.audio, 2018/11/28, add for switch class driver
+obj-$(CONFIG_SWITCH)            += switch/
+#endif #ODM_HQ_EDIT
+

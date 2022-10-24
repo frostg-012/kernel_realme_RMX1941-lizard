@@ -766,6 +766,42 @@ config PANEL_BOOT_MESSAGE
 	  An empty message will only clear the display at driver init time. Any other
 	  printf()-formatted message is valid with newline and escape codes.
 
+config UID_SYS_STATS
+	bool "Per-UID statistics"
+	depends on PROFILING && TASK_XACCT && TASK_IO_ACCOUNTING
+	help
+	  Per UID based cpu time statistics exported to /proc/uid_cputime
+	  Per UID based io statistics exported to /proc/uid_io
+	  Per UID based procstat control in /proc/uid_procstat
+
+config UID_SYS_STATS_DEBUG
+	bool "Per-TASK statistics"
+	depends on UID_SYS_STATS
+	default n
+	help
+	  Per TASK based io statistics exported to /proc/uid_io
+
+config MEMORY_STATE_TIME
+	tristate "Memory freq/bandwidth time statistics"
+	depends on PROFILING
+	help
+	  Memory time statistics exported to /sys/kernel/memory_state_time
+
+#ifdef ODM_HQ_EDIT
+#zhangmengchun@ODM.BSP.system  2018/11/29 add for board id
+config GET_BOARD_ID
+	bool "Provide Proc Interface To get board id"
+	help
+	Provide a interface for geting board id
+#endif #ODM_HQ_EDIT
+
+#ifdef ODM_HQ_EDIT
+#zhangmengchun@ODM.BSP.system  2018/11/29 add for board id
+config HQ_DEVINFO_SUPPORT
+	bool "HQ_DEVINFO_SUPPORT"
+	help
+	Provide a interface for geting board id
+#endif #ODM_HQ_EDIT
 source "drivers/misc/c2port/Kconfig"
 source "drivers/misc/eeprom/Kconfig"
 source "drivers/misc/cb710/Kconfig"
@@ -778,4 +814,9 @@ source "drivers/misc/mic/Kconfig"
 source "drivers/misc/genwqe/Kconfig"
 source "drivers/misc/echo/Kconfig"
 source "drivers/misc/cxl/Kconfig"
+source "drivers/misc/mediatek/Kconfig"
+#ifdef ODM_HQ_EDIT
+#duwenchao@ODM_HQ.BSP.System.devinfo, 2018/12/07 add devinfo fs.
+source "drivers/misc/hqdevinfo/Kconfig"
+#endif //ODM_HQ_EDIT
 endmenu
