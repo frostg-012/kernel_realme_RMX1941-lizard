@@ -492,13 +492,12 @@ static struct audit_entry *audit_data_to_entry(struct audit_rule_data *data,
 		case AUDIT_OBJ_LEV_LOW:
 		case AUDIT_OBJ_LEV_HIGH:
 			str = audit_unpack_string(&bufp, &remain, f_val);
-			if (IS_ERR(str)){
+			if (IS_ERR(str)) {
 				err = PTR_ERR(str);
 				goto exit_free;
 			}
 			entry->rule.buflen += f_val;
 			f->lsm_str = str;
-
 			err = security_audit_rule_init(f->type, f->op, str,
 						       (void **)&f->lsm_rule);
 			/* Keep currently invalid fields around in case they
@@ -507,37 +506,33 @@ static struct audit_entry *audit_data_to_entry(struct audit_rule_data *data,
 				pr_warn("audit rule for LSM \'%s\' is invalid\n",
 					str);
 				err = 0;
-			}else if (err) {
-				kfree(str);
+			} else if (err)
 				goto exit_free;
-			} 
 			break;
 		case AUDIT_WATCH:
 			str = audit_unpack_string(&bufp, &remain, f_val);
-			if (IS_ERR(str)){
+			if (IS_ERR(str)) {
 				err = PTR_ERR(str);
 				goto exit_free;
 			}
-			entry->rule.buflen += f_val;
-
 			err = audit_to_watch(&entry->rule, str, f_val, f->op);
 			if (err) {
 				kfree(str);
 				goto exit_free;
 			}
+			entry->rule.buflen += f_val;
 			break;
 		case AUDIT_DIR:
 			str = audit_unpack_string(&bufp, &remain, f_val);
-			if (IS_ERR(str)){
+			if (IS_ERR(str)) {
 				err = PTR_ERR(str);
 				goto exit_free;
 			}
-			entry->rule.buflen += f_val;
-
 			err = audit_make_tree(&entry->rule, str, f->op);
 			kfree(str);
 			if (err)
 				goto exit_free;
+			entry->rule.buflen += f_val;
 			break;
 		case AUDIT_INODE:
 			f->val = f_val;
@@ -549,10 +544,10 @@ static struct audit_entry *audit_data_to_entry(struct audit_rule_data *data,
 			if (entry->rule.filterkey || f_val > AUDIT_MAX_KEY_LEN)
 				goto exit_free;
 			str = audit_unpack_string(&bufp, &remain, f_val);
-                        if (IS_ERR(str)){
-                                err = PTR_ERR(str);
-                                goto exit_free;
-                        }
+			if (IS_ERR(str)) {
+				err = PTR_ERR(str);
+				goto exit_free;
+			}
 			entry->rule.buflen += f_val;
 			entry->rule.filterkey = str;
 			break;
@@ -564,14 +559,13 @@ static struct audit_entry *audit_data_to_entry(struct audit_rule_data *data,
 				err = PTR_ERR(str);
 				goto exit_free;
 			}
-			entry->rule.buflen += f_val;
-
 			audit_mark = audit_alloc_mark(&entry->rule, str, f_val);
 			if (IS_ERR(audit_mark)) {
 				kfree(str);
 				err = PTR_ERR(audit_mark);
 				goto exit_free;
 			}
+			entry->rule.buflen += f_val;
 			entry->rule.exe = audit_mark;
 			break;
 		default:
