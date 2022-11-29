@@ -832,8 +832,6 @@ resizefs_out:
 				 sbi->s_es->s_encrypt_pw_salt, 16))
 			return -EFAULT;
 		return 0;
-#else
-		return -EOPNOTSUPP;
 #endif
 	}
 	case EXT4_IOC_GET_ENCRYPTION_POLICY:
