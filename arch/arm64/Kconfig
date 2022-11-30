@@ -469,10 +469,13 @@ config ARM64_ERRATUM_855873
 	bool "Cortex-A53: 855873: An eviction might overtake a cache clean operation"
 	default y
 	help
-	  This option adds an alternative code sequence to work around ARM
-	  erratum 855873 on Cortex-A53 parts up to r0p4.
-	  Because of this erratum, the processor might issue an eviction and
-	  an L2 cache clean operation to the interconnect in the wrong order.
+	  This option adds work around for Arm Cortex-A55 Erratum 1024718.
+
+	  Affected Cortex-A55 cores (all revisions) could cause incorrect
+	  update of the hardware dirty bit when the DBM/AP bits are updated
+	  without a break-before-make. The work around is to disable the usage
+	  of hardware DBM locally on the affected cores. CPUs not affected by
+	  erratum will continue to use the feature.
 
 	  If unsure, say Y.
 
